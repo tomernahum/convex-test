@@ -7,6 +7,7 @@ export default function Thing() {
 
     const { docState, actions } = useEDocQuery(docId);
     const { doAction } = useDoAction();
+    const { doCompression } = useCompressAction(docId);
     
     const clearEDocMutation = useMutation(api.eDocFunctions.clearEDoc);
 
@@ -43,6 +44,10 @@ export default function Thing() {
         <button onClick={doIncrementAction}>
             Increment
         </button>
+        <br />
+        <button onClick={doCompression} className="mt-2">
+            Compress Doc
+        </button>
     </div>;
 }
 
@@ -78,6 +83,7 @@ function useEDocQuery(id: string) {
     return {
         docState,
         actions: validatedActionData,
+        fullActions: actions,
     };
 }
 
@@ -95,6 +101,36 @@ function useDoAction(){
     };
 }
 
+function useCompressAction(id: string){
+
+    const {docState, fullActions} = useEDocQuery(id);
+
+    const compressActionMutation = useMutation(api.eDocFunctions.compressEDoc);
+
+    function doCompression(){
+        // Todo: needs thorough testing & consideration
+        const newDocState: DocState = docState;
+        const lastAction = fullActions[fullActions.length - 1];
+        
+        const action:DAction = {
+            actionName: "_setDoc",
+            actionParams: {
+                newDocState: newDocState
+            }
+        }
+        const encryptedActionData = JSON.stringify(action);
+
+        compressActionMutation({
+            docId: id,
+            lastActionId: lastAction._id,
+            setAction: encryptedActionData
+        });
+    }
+    return {
+        doCompression,
+    };
+}
+
 // todo, proper framework/composability
 type DocState = {
     testMessages: DAction[];
@@ -102,15 +138,23 @@ type DocState = {
 } | null;
 
 const actionResolvers = {
-    initDoc: (docState: DocState, action: DAction) => {
+    _initDoc: (docState: DocState, action: DAction) => {
         if (docState !== null) {
             return docState;
         }
         return { testMessages: [], counter: 0 };
     },
+    _setDoc: (docState: DocState, action: DAction) => {
+        const newDocState = action.actionParams.newDocState as DocState; // TODO, proper typing
+        if (!newDocState) {
+            throw new Error("Invalid newDocState");
+        }
+        return newDocState;
+    },
+
     test: (docState: DocState, action: DAction) => {
         if (!docState) {
-            docState = actionResolvers.initDoc(null, action);
+            docState = actionResolvers._initDoc(null, action);
         }
 
         let testMessages = docState.testMessages || [];
@@ -119,14 +163,14 @@ const actionResolvers = {
     },
     clearTestMessages: (docState: DocState, action: DAction) => {
         if (!docState) {
-            docState = actionResolvers.initDoc(null, action);
+            docState = actionResolvers._initDoc(null, action);
         }
         console.log("Clearing test messages");
         return { ...docState, testMessages: [] };
     },
     increment: (docState: DocState, action: DAction) => {
         if (!docState) {
-            docState = actionResolvers.initDoc(null, action);
+            docState = actionResolvers._initDoc(null, action);
         }
         return { ...docState, counter: docState.counter + 1 };
     },

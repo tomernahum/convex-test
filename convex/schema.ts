@@ -17,18 +17,21 @@ export default defineSchema({
   }),
   
   eActions: defineTable({
-    actionData: v.string(),
-    creatorId: v.optional(v.id("users")), // TODO: make one that clients can verify without trusting the server
-  }),
-
-  // eBaseStates: defineTable({
-  //   stateData: v.string(),
-  // }),
-  
-  // we could get rid of eActions and just put it in here, copying it when we get it (we have to copy id anyway to insert in here)
-  eDocActionPairs: defineTable({
     // docId: v.id("eDocs"),
     docId: v.string(),
-    actionId: v.id("eActions"),
+    allDocIds: v.array(v.string()), // other docs for which an identical copy of this action was applied
+    
+    actionData: v.string(),
+    creatorId: v.optional(v.id("users")), // TODO: make one that clients can verify without trusting the server
   }).index("by_doc", ["docId"]),
+
+  // maybe. would be same as eActions except we don't compress the actions. can then eventually delete really old actions, and can query by time or since_action
+  // eActionArchive: defineTable({
+  //   docId: v.string(),
+  //   allDocIds: v.array(v.string()), // other docs for which an identical copy of this action was applied
+    
+  //   actionData: v.string(),
+  //   creatorId: v.optional(v.id("users")),
+  // }).index("by_doc", ["docId"]),
+
 });
