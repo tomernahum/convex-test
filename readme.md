@@ -26,7 +26,7 @@ if you think about it they literally treat transactions (= mutation functions in
 as something that can be rerun from the start if data has changed. eg you could have an increment function = an increment transaction = get C; R = C+1; set C to R; if they get fussed up in the middle by C changing, it literally just retries it waiting for a time where C is not busy. so their mutations is kind of like what i've been calling "actions" in my system
 
 ok I've been talking to the ai and i realized this is called event sourcing. it also reccomended kurrentdb, datomic, materialize, posgrtgres materialize view,  and now i have a term to look up if I want. I mean we also need a way to compress and throw out old events but I'm sure stuff has that.
-also might be similar to WAL Write Ahead Log?
+Also another term to look up is event driven architecture
 
 
 
@@ -34,16 +34,10 @@ anyways yeah. I'm going to look up if transactions really need to run in the ser
     yeah confirmed they don't in the general case
     I think my thing which is event sourcing is still a good solution maybe... but not the only solution. 
 
-
-
-\
-\
-\
-\
-\
-\
-\
-
-
-
+/
 //one problem with convex is it's for-profit/VC-backed lol, but they do have open source / self hostable version (+ i haven't tested it thoroughly im just taking there word that the transactions are very good)
+
+
+----
+
+Maybe I will implement my client side library and keep all the convex stuff to one interface, then have swappable adapters (plugins) that use convex or something else. these adapters may also have different ACIDity properties and efficiencies and stuff. i saw this in socket.io for example.

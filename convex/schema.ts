@@ -25,13 +25,6 @@ export default defineSchema({
     creatorId: v.optional(v.id("users")), // TODO: make one that clients can verify without trusting the server
   }).index("by_doc", ["docId"]),
 
-  // maybe. would be same as eActions except we don't compress the actions. can then eventually delete really old actions, and can query by time or since_action
-  // eActionArchive: defineTable({
-  //   docId: v.string(),
-  //   allDocIds: v.array(v.string()), // other docs for which an identical copy of this action was applied
-    
-  //   actionData: v.string(),
-  //   creatorId: v.optional(v.id("users")),
-  // }).index("by_doc", ["docId"]),
+  
 
 });
