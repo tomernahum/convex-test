@@ -17,6 +17,8 @@ how many actions a user did? maybe acceptable but idk about it, because idk if y
     eg for the sequence above they would be able to distinguish, but for two sequences with the same number of actions done.
         
 
+
+
 this difference in acceptability might also make the app less generalizable, because collaborative text docs are different than boolean forms for example
     eg user filling out form with branching fields and sending diff number of actions for each field, would reveal what option they picked, so our app would not be suitable for that if server knows how many actions you take. also applies to times where the application code itself changes how many changes it makes based on what you do (eg move bullet within doc = 1 change, move bullet across doc = 2 changes, or 1 change touching 2 docs). annoying gotchas. 
 
@@ -28,3 +30,54 @@ this difference in acceptability might also make the app less generalizable, bec
         I will keep getting advice on cryptographic modeling and stuff
 
 we could reimagine docs as being large chunks of data, like multiple app-docs. then docs only differ when you share intersections of them. like ven diagram
+    and then also support sharing subset of your state
+
+if we chunk all possible shared documents, if we can get away with doing that (not have it be too much data for the user to load every time), we might be able to get away with stuff like having one action stream per chunk (reducing the amount of blank actions needed), and maybe get away with less atomicity, though atomicity is important for the operation of moving state from private to shared (don't want it to be deleted half way)
+    idk if we need anything besides move, yeah? everything else will be within a data chunk, so will have a fully deterministic order. other cross chunk transactions could only be some variation of move (move unevenly), which we might not even need that for our purposes
+
+simple scheme for moving data between documents atomically? (without risking loss from interruptions?) - Moving some data from docA to docB
+    a benefit is that the mover def has write access to both documents (or at least read to docA and write to docB)
+    presumably db strategies apply, eg 2 phase commit,
+    
+    starting with method assuming theres no actions modifying the section of data that we move that happen during the move (maybe can use locking or occ + retries)
+
+    Leveraging existing stuff Approach:
+        db.transact(   // eg convex mutations
+            - read the subsection of data from docA
+            - write it to docB
+            - delete from docA
+        )
+        server will have to know you are doing a move, but maybe that's ok idk, though better for it not to, (better for it not to know for sure that you weren't just writing to two docs at the same time)
+        benefit: someone else will write the code for all the ACIDity
+
+
+    Naive Approach
+        - read the subsection of data from docA
+        - write it to docB
+        (maybe: wait for confirmation that it was written to docB?)
+        - delete from docA
+        what is wrong with this?
+            could get interupted between any steps:
+                worst case is it's written in docB but not deleted from docA, at least it's not destructive
+            could the delete go through but not the write?
+                we need to wait for 100% confirmation that the right wen through
+            
+            conflicting writes could go on in between this 
+                can lock some stuff or occ (fail our writes instead of others writes)
+
+    Approach 2
+        - read the subsection of data from docA
+        - write it to docB temporary section
+        (await confirmation that it was written to temporary section)
+        - delete from doc A
+        (await confirmation that deletion write went through)
+        - move it from docB temporary section to docB proper
+
+        (this might be like 2 phase commit I'm not sure)
+        im tired now not done here
+
+
+    
+    
+
+        
