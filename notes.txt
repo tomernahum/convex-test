@@ -1,0 +1,30 @@
+- can squash fully confirmed actions up to as frequently as on every new action send
+    - in theory squashing might use more bandwith than sending actions though
+
+timing of actions could reveal some data
+for example two add_letter actions that come especially quickly after one another could be inferred to be adding two of the same letter, or a series of a lot of actions coming after another could be infered as holding backspace. who knows what kind of detail this could eventually reveal
+we can fix this by
+- enforcing minimum time between actions/changes actually being sent (eg every 250 ms) 
+- enforcing maximum time of same, ie sending ("did nothing") action every 250ms (could get very annoying/expensive I imagine)
+
+this constraint might mean that I should rethink my scheme
+
+We should also have a security game model like in cryptography, where there can beany two sequences of changes and the attacker shouldn't be able to distinguish between them (+ other stuff we let the attacker do)
+    for example. user types "H" waits a second "E", waits .5 seconds "ll" "o"
+    vs user pastes in "Hi!!"
+then we will discover inherent limitations, and decide whether they are acceptable (for example server distinguishing between 100 page doc and 5 page doc is probably acceptable, though might not need that specifically)
+how many actions a user did? maybe acceptable but idk about it, because idk if you could reconstruct differences in messages
+    eg for the sequence above they would be able to distinguish, but for two sequences with the same number of actions done.
+        
+
+this difference in acceptability might also make the app less generalizable, because collaborative text docs are different than boolean forms for example
+    eg user filling out form with branching fields and sending diff number of actions for each field, would reveal what option they picked, so our app would not be suitable for that if server knows how many actions you take. also applies to times where the application code itself changes how many changes it makes based on what you do (eg move bullet within doc = 1 change, move bullet across doc = 2 changes, or 1 change touching 2 docs). annoying gotchas. 
+
+    for collaborating on text documents, its maybe ok for server to know how many actions you did? since it's probably not going to infer what exact text you wrote, just the likely length (if it has an estimate of delete to add ratio from external world)? But how do we know it can't count characters and figure out what words you're typing. 
+    so we will include above mentioned gaurdrails like sending stuff even if you're not typing, then it just knows how long you're online for which seems even less likely to reconstruct sensitive data (but could probably predict you have a long doc or an important doc if you spend a lot of time on it, so maybe its a tradeoff, or maybe theres no way to prevent it)
+        i mean if user only sends writes, + caches doc state then server won't know how long you're looking at doc for. but you probably want to subscribe to doc changes from server in case someone else changes it (then it would know)so i guess you could subscribe to changes on all docs you're a part of instead? That might actually scale far enough idk, if not then a recent subset for obuscation. 
+        
+        but how do we know what obfuscation methods actually matter to do vs not.
+        I will keep getting advice on cryptographic modeling and stuff
+
+we could reimagine docs as being large chunks of data, like multiple app-docs. then docs only differ when you share intersections of them. like ven diagram
